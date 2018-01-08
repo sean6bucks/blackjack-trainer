@@ -1,0 +1,27 @@
+#App {
+  width: 100%; }
+
+#App, #Table {
+  margin: 0; }
+
+#App {
+  padding: 0; }
+
+* {
+  box-sizing: border-box; }
+
+#Table {
+  padding: 50px;
+  background: #0d694d; }
+
+#Dealer, #User {
+  width: 190px;
+  margin: 0 auto; }
+
+.card {
+  display: inline-block;
+  margin: 0 10px;
+  width: 75px;
+  height: 105px;
+  border: 1px solid black;
+  border-radius: 4px; }

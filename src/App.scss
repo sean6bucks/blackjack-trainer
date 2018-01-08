@@ -1,0 +1,44 @@
+%full_width {
+	width: 100%;
+}
+
+%margin_zero {
+	margin: 0;
+}
+%padding_zero {
+	padding: 0;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+// MAIN LAYOUT
+
+#App {
+	@extend %full_width;
+	@extend %margin_zero;
+	@extend %padding_zero;
+}
+
+#Table {
+	@extend %margin_zero;
+	padding: 50px;
+	background: #0d694d;
+}
+
+#Dealer, #User {
+	width: 190px;
+	margin: 0 auto;
+}
+
+// CARDS
+
+.card {
+	display: inline-block;
+	margin: 0 10px;
+	width: 75px;
+	height: 105px;
+	border: 1px solid black;
+	border-radius: 4px;
+}
