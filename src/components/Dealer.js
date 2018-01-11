@@ -1,19 +1,14 @@
-import React, { Component } from 'react';
+import React from 'react';
+
+import { Cards } from './Cards';
 
 export const Dealer = ( props ) => {
 
-	const cards = props.cards
-	let labels = ['', ''];
-	if ( cards.length ) {
-		labels = [ cards[0].name, cards[1].name ];
-	}
+	const hand = props.data;
 
 	return (
 		<div id="Dealer">
-			<div className="cards">
-				<span className="card show-card">{ labels[0] }</span>
-				<span className="card hole-card">{ labels[1] }</span>
-			</div>
+			<Cards cards={ hand.cards } />
 		</div>
 	);
 };
