@@ -14,14 +14,39 @@
   padding: 50px;
   background: #0d694d; }
 
-#Dealer, #User {
-  width: 190px;
-  margin: 0 auto; }
+#Dealer {
+  margin: 0px auto 100px auto; }
+
+#User {
+  margin: 0px auto 30px auto; }
+
+.cards {
+  text-align: center; }
 
 .card {
   display: inline-block;
   margin: 0 10px;
   width: 75px;
   height: 105px;
-  border: 1px solid black;
+  vertical-align: top;
+  background: #197ac9;
+  color: #197ac9;
+  border: 1px solid #fff;
   border-radius: 4px; }
+
+.show-card {
+  background: #fff; }
+
+.actions {
+  text-align: center;
+  margin: 15px auto; }
+
+.button {
+  display: inline-block;
+  min-width: 100px;
+  padding: 10px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid;
+  border-radius: 5px;
+  cursor: pointer; }
