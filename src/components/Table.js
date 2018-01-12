@@ -77,10 +77,11 @@ const checkBlackjack = hand_val => {
 // ===== TABLE COMPONENT
 
 export class Table extends Component {
-	constructor(props) {
+	constructor (props) {
 		super(props);
 
 		this.state = {
+			status: 'start',
 			shoe: [],
 			dealer: {
 				cards: [],
@@ -88,9 +89,11 @@ export class Table extends Component {
 			},
 			user: {
 				cards: [],
-				value: 0,
-				bankroll: 0,
-				current_bet: 0
+				value: 0
+			},
+			result: {
+				winner: '',
+				message: ''
 			}
 		};
 
