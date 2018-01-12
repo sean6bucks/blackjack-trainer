@@ -6,19 +6,20 @@ export const Actions = ( props ) => {
 	const actions = () => {
 		switch ( props.status ) {
 			case 'deal':
-				return <span className="button" onClick={ props.deal }>DEAL</span>;
+				return <span className="button" onClick={ props.dealClick }>DEAL</span>;
 			case 'user':
 				return (
 					<div className="user-actions">
-						<span className="button" onClick={ () => props.hit( 'user', props.user.cards ) }>HIT</span>
+						<span className="button" onClick={ () => props.hitClick( 'user' ) }>HIT</span>
+						<span className="button" onClick={ props.standClick }>STAND</span>
 					</div>
 				);
 			case 'end':
-
-				break;
+                // TODO: TO BE UPDATED WITH BETTING SYSTEM
+				return <span className="button" onClick={ props.dealClick }>DEAL</span>
 			default:
 				// HANDLE SESSION START
-				return <span className="button" onClick={ props.start }>START</span>;
+				return <span className="button" onClick={ props.startClick }>START</span>;
 		}
 	}
 

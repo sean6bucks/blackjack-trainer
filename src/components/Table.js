@@ -11,18 +11,37 @@ import { Hand } from './Hand';
 import { Actions } from './Actions';
 import { Results } from './Results';
 
+// ====== STATIC VALUES
 
-// ====== FUNCTIONS
-
-// CREATE AND SHUFFLE DECKS AND SHOE
 const deck_vals = [ '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A' ];
 const deck_suits = [ 'spades', 'hearts', 'clubs', 'diamonds' ];
 
+
+// ====== FUNCTIONS
+
+const newHand = () => {
+	return {
+		dealer: {
+			cards: [],
+			value: 0
+		},
+		user: {
+			cards: [],
+			value: 0
+		},
+		result: {
+			winner: '',
+			message: ''
+		}
+	};
+};
+
+// CREATE AND SHUFFLE DECKS AND SHOE
 const setCardValue = val => {
 	if ( val === 'A' ) return 11;
 	else if ( ['J', 'Q', 'K'].indexOf(val) > -1 ) return 10;
 	else return parseInt( val, 0 );
-}
+};
 
 const createDeck = () => {
     // CREATE ARRAY OF SUITS W/ EACH VALUE AND FLATTEN
@@ -43,7 +62,7 @@ const createDeck = () => {
 };
 
 const shuffleDeck = deck => {
-	return randomize( deck );
+	return shuffle( deck );
 };
 
 const setShoe = ( num_of_decks = 8 ) => {
@@ -52,12 +71,18 @@ const setShoe = ( num_of_decks = 8 ) => {
 	times( num_of_decks, () => {
 		shoe.push( createDeck() );
 	});
+
 	return flatten( shoe );
 };
 
-const handValue = hand => {
+const handValue = ( hand=[] ) => {
 	// REDUCER FUNCTION
-	const reducer = ( sum, current_val ) => sum + current_val;
+	const reducer = ( sum, current_val ) => {
+		if ( current_val === 11 && sum >= 11 ) {
+			current_val = 1;
+		}
+		return sum + current_val;
+	}
 
     // GET HAND VALUES ONLY
 	let values = hand.map( card => card.value );
@@ -70,20 +95,26 @@ const handValue = hand => {
 	}
     // ELSE JUST RETURN SUM
 	return value;
-}
-
-const checkBlackjack = hand_val => {
-	return hand_val === 21;
 };
+
+const checkBlackjack = ( cards=[], value=0 ) => {
+	return cards.length === 2 && value === 21;
+};
+
 const checkBust = hand_val => {
-	return hand_val > 21;
-}
+	return typeof hand_val === 'number' && hand_val > 21;
+};
 
 const getResults = ( user_val, dealer_val ) => {
-	if ( user_val > 21 || dealer_val > user_val ) {
+	if ( dealer_val > 21 ) {
+		return {
+			winner: 'user',
+			message: 'Dealer Busts!'
+		};
+	} else if ( user_val > 21 || dealer_val > user_val ) {
 		return {
 			winner: 'dealer',
-			message: user_val > 21 ? 'Player Busts.' : 'Dealer Wins.'
+			message: dealer_val === 21 ? 'Dealer has BlackJack.' : user_val > 21 ? 'Player Busts.' : 'Dealer Wins.'
 		};
 	} else if ( user_val === dealer_val ) {
 		return {
@@ -93,10 +124,10 @@ const getResults = ( user_val, dealer_val ) => {
 	} else {
 		return {
 			winner: 'user',
-			message: dealer_val > 21 ? 'Dealer Busts!' : 'Player Wins!'
+			message: user_val === 21 ? 'Player has BlackJack!' : 'Player Wins!'
 		};
 	}
-}
+};
 
 // ===== TABLE COMPONENT
 
@@ -120,79 +151,96 @@ export class Table extends Component {
 				message: ''
 			}
 		};
-
-		this.resetHand = this.resetHand.bind(this);
-		this.dealHand = this.dealHand.bind(this);
-		this.endHand = this.endHand.bind(this);
 	}
 
     // CUSTOM FUNCTIONS
 
-	resetHand() {
-		// TODO: REMOVE ON HAND STATUS
-		let deal_data = this.state.dealer;
-		deal_data.cards = [];
-
-		let user_data = this.state.user;
-		user_data.cards = [];
-
-		this.setState( (prevState, props) => ({
-			dealer: deal_data,
-			user: user_data
-		}) );
-
-		this.dealHand();
-	}
-
-	dealHand() {
-
-        // MAKE SURE THERE ARE CARDS
-		if ( !this.state.shoe.length ) return;
-        // IF LESS THAN 25 CARDS LEFT RESET SHOE
-		if ( this.state.shoe.length < 25 ) this.setState({ shoe: setShoe() });
-
-        // TODO: HANDLE BETTER
-		times( 2, () => {
-			this.dealCard( 'user', this.state.user.cards );
-			this.dealCard( 'dealer', this.state.dealer.cards );
+	startSession = () => {
+		console.log( 'Session Started' );
+		this.setState( () => {
+			return {
+				status: 'deal',
+				shoe: setShoe()
+			}
 		});
-
-        // AFTER DEAL CHECK FOR BJ
-		if ( checkBlackjack( this.state.dealer.value ) ||
-			checkBlackjack( this.state.user.value ) ) this.endHand();
 	}
 
-	dealCard( player, hand=[] ) {
+	startNewHand = () => {
+		console.log('New Hand');
+        // IF LESS THAN 12 CARDS LEFT RESET SHOE
+		if ( this.state.shoe.length < 12 ) this.setState({ shoe: setShoe() });
+        // RESET HANDS AND DEAL NEW CARDS
+		this.setState( newHand(), () => {
+			// TODO: HANDLE BETTER
+			times( 2, () => {
+				for ( let player of [ 'user', 'dealer' ] ) {
+					this.dealCard( player, this.state[player].cards );
+				}
+			});
+
+			this.setState({
+				status: 'user'
+			});
+		});
+	}
+
+	standHand = () => {
+		this.setState({
+			status: 'dealer'
+		}, () => {
+			this.runDealerHand();
+		})
+	}
+
+	runDealerHand = () => {
+		const value = this.state.dealer.value;
+        // DEALER HITS ON SOFT 17 OR BELOW HARD 17
+		if ( ( isArray(value) && value[0] <= 17 ) || ( !isArray(value) && value < 17 ) ) {
+			this.dealCard( 'dealer', () => {
+				this.runDealerHand();
+			} );
+		} else {
+			this.endHand();
+		}
+	}
+
+	dealCard = ( player, callback ) => {
 		let new_shoe = this.state.shoe,
-			new_cards = hand;
+			new_cards = this.state[player].cards;
 
         // MOVE NEW CARD FROM SHOE TO HAND
 		new_cards.push( new_shoe.shift() );
-		// SET DEALER HOLE CARD IF FIRST CARD
-		// if ( player === 'dealer' && new_cards.length === 1 )
-		// 	new_cards[0].type = 'hole';
 
         // UPDATE STATE
-		this.setState({
-			shoe: new_shoe,
-			[player]: Object.assign( {}, this.state[player], {
-				cards: new_cards,
-				value: handValue( new_cards )
-			} )
+		const value = handValue( new_cards );
+		this.setState( (prevState, props) => {
+			return {
+				shoe: new_shoe,
+				[player]: Object.assign( {}, this.state[player], {
+					cards: new_cards,
+					value
+				})
+			};
+		}, () => {
+            // CHECK LATEST HAND RESULTS
+			if ( checkBlackjack( new_cards, value ) || checkBust( value ) ) {
+				this.endHand();
+			}
+
+			if ( isFunction(callback) ) callback();
 		});
 	}
 
+	endHand = () => {
+		let result = getResults( this.state.user.value, this.state.dealer.value );
 
-
-	endHand() {
-		alert('blackjack');
+		this.setState({
+			status: 'end',
+			result
+		});
 	}
 
     // LIFECYCLE
-
-	componentWillMount() {
-		this.setState({ shoe: setShoe() });
-	}
 
 	render() {
 		return (
@@ -202,7 +250,13 @@ export class Table extends Component {
 				</section>
 				<section id="User">
 					<Hand hand_id="user" data={ this.state.user } />
-					<Actions status={ this.state.status } user={ this.state.user } start={ this.startHand } deal={ this.dealHand } hit={ this.dealCard } />
+					<Actions
+						status={ this.state.status }
+						user={ this.state.user }
+						startClick={ this.startSession }
+						dealClick={ this.startNewHand }
+						hitClick={ this.dealCard }
+						standClick={ this.standHand } />
 				</section>
 				<Results status={ this.state.status } result={ this.state.result }/>
 			</main>
