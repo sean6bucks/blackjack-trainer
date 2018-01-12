@@ -6,8 +6,9 @@ import React, { Component } from 'react';
 import { flatten, randomize, times } from '../scripts/helpers';
 
 // COMPONENTS
-import { Dealer } from './Dealer';
-import { User } from './User';
+import { Hand } from './Hand';
+import { Actions } from './Actions';
+import { Results } from './Results';
 
 
 // ====== FUNCTIONS
@@ -19,7 +20,7 @@ const deck_suits = [ 'spades', 'hearts', 'clubs', 'diamonds' ];
 const setCardValue = val => {
 	if ( val === 'A' ) return 11;
 	else if ( ['J', 'Q', 'K'].indexOf(val) > -1 ) return 10;
-	else return parseInt( val );
+	else return parseInt( val, 0 );
 }
 
 const createDeck = () => {
@@ -73,6 +74,28 @@ const handValue = hand => {
 const checkBlackjack = hand_val => {
 	return hand_val === 21;
 };
+const checkBust = hand_val => {
+	return hand_val > 21;
+}
+
+const getResults = ( user_val, dealer_val ) => {
+	if ( user_val > 21 || dealer_val > user_val ) {
+		return {
+			winner: 'dealer',
+			message: user_val > 21 ? 'Player Busts.' : 'Dealer Wins.'
+		};
+	} else if ( user_val === dealer_val ) {
+		return {
+			winner: 'push',
+			message: 'Push'
+		}
+	} else {
+		return {
+			winner: 'user',
+			message: dealer_val > 21 ? 'Dealer Busts!' : 'Player Wins!'
+		};
+	}
+}
 
 // ===== TABLE COMPONENT
 
@@ -172,10 +195,16 @@ export class Table extends Component {
 
 	render() {
 		return (
-			<div id="Table">
-				<Dealer data={ this.state.dealer } />
-				<User data={ this.state.user } dealClick={ this.resetHand } />
-			</div>
+			<main id="Table">
+				<section id="Dealer">
+					<Hand hand_id="dealer" data={ this.state.dealer } />
+				</section>
+				<section id="User">
+					<Hand hand_id="user" data={ this.state.user } />
+					<Actions status={ this.state.status } user={ this.state.user } start={ this.startHand } deal={ this.dealHand } hit={ this.dealCard } />
+				</section>
+				<Results status={ this.state.status } result={ this.state.result }/>
+			</main>
 		);
 	}
 };

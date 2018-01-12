@@ -2,8 +2,9 @@ import React from 'react';
 
 const Card = ( props ) => {
 	const card = props.card || {};
+
 	return (
-		<span className={ card.type + '-card card' }>{ card.name }</span>
+		<li className={ card.type + '-card card' }>{ card.name }</li>
 	);
 }
 
@@ -16,7 +17,12 @@ export const Cards = ( props ) => {
 
 	return (
 		<div className="cards">
-			{ card_list }
+			<div className="cards-bg">
+				<span className="bg-outline"></span>
+			</div>
+			<ul className="card-list">
+				{ card_list }
+			</ul>
 		</div>
 	);
 };
