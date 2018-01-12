@@ -3,7 +3,8 @@ import React, { Component } from 'react';
 // import './App.css';
 
 // HELPER FUNCTIONS
-import { flatten, randomize, times } from '../scripts/helpers';
+import { flatten, shuffle, isArray, isFunction } from 'lodash';
+import { times } from '../scripts/helpers';
 
 // COMPONENTS
 import { Hand } from './Hand';
