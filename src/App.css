@@ -1,45 +1,80 @@
-#App {
+#App, .hand .cards .card-list {
   width: 100%; }
 
-#App, #Table {
+#App, #Table, .hand .cards .card-list, .hand h2 {
   margin: 0; }
 
-#App {
+#App, .hand .cards .card-list {
   padding: 0; }
+
+.hand .cards .cards-bg .bg-outline, .hand .cards .card {
+  width: 75px;
+  height: 105px; }
 
 * {
   box-sizing: border-box; }
 
+#Table, #Dealer, #User {
+  position: absolute;
+  left: 0;
+  width: 100%; }
+
+#Table, #Dealer {
+  top: 0; }
+
+#Table, #User {
+  bottom: 0; }
+
 #Table {
-  padding: 50px;
   background: #0d694d; }
 
-#Dealer {
-  margin: 0px auto 100px auto; }
+#Dealer, #User {
+  text-align: center;
+  padding: 50px 10px; }
 
-#User {
-  margin: 0px auto 30px auto; }
-
-.cards {
+.hand .cards {
+  position: relative;
   text-align: center; }
+  .hand .cards:first-child {
+    margin-bottom: 15px; }
+  .hand .cards .cards-bg, .hand .cards .card-list {
+    height: 105px; }
+  .hand .cards .cards-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: center; }
+    .hand .cards .cards-bg .bg-outline {
+      display: inline-block;
+      border: 3px solid rgba(255, 255, 255, 0.5);
+      border-radius: 5px; }
+  .hand .cards .card-list {
+    list-style: none; }
+    .hand .cards .card-list li {
+      display: inline-block; }
+  .hand .cards .card {
+    display: inline-block;
+    margin: 0 10px;
+    vertical-align: top;
+    background: #197ac9;
+    color: #197ac9;
+    border: 1px solid #fff;
+    border-radius: 4px; }
+  .hand .cards .show-card {
+    background: #fff; }
 
-.card {
-  display: inline-block;
-  margin: 0 10px;
-  width: 75px;
-  height: 105px;
-  vertical-align: top;
-  background: #197ac9;
-  color: #197ac9;
-  border: 1px solid #fff;
-  border-radius: 4px; }
-
-.show-card {
-  background: #fff; }
+.hand h2 {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  font-size: 24px;
+  font-weight: 300; }
+  .hand h2:first-child {
+    margin-bottom: 15px; }
 
 .actions {
   text-align: center;
-  margin: 15px auto; }
+  margin-top: 15px; }
 
 .button {
   display: inline-block;
@@ -50,3 +85,17 @@
   border: 1px solid;
   border-radius: 5px;
   cursor: pointer; }
+
+#Results {
+  position: absolute;
+  top: calc( 50% - 28px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 600px;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.25); }
+  #Results p {
+    text-align: center;
+    padding: 50px 0; }

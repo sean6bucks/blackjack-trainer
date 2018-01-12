@@ -9,6 +9,11 @@
 	padding: 0;
 }
 
+%card_block {
+	width: 75px;
+	height: 105px;
+}
+
 * {
 	box-sizing: border-box;
 }
@@ -21,46 +26,95 @@
 	@extend %padding_zero;
 }
 
+#Table, #Dealer, #User {
+	position: absolute;
+	left: 0;
+	width: 100%;
+}
+
+#Table, #Dealer {
+	top: 0;
+}
+
+#Table, #User {
+	bottom: 0;
+}
+
 #Table {
 	@extend %margin_zero;
-	padding: 50px;
 	background: #0d694d;
 }
 
-#Dealer {
-	margin: 0px auto 100px auto;
-}
-
-#User {
-	margin: 0px auto 30px auto;
+#Dealer, #User {
+	text-align: center;
+	padding: 50px 10px;
 }
 
 // CARDS
-.cards {
-	text-align: center;
+
+.hand {
+	.cards {
+		position: relative;
+		&:first-child {
+			margin-bottom: 15px;
+		}
+		text-align: center;
+		.cards-bg, .card-list {
+			height: 105px
+		}
+		.cards-bg {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			text-align: center;
+			.bg-outline {
+				@extend %card_block;
+				display: inline-block;
+				border: 3px solid rgba( 255, 255, 255, 0.5 );
+				border-radius: 5px;
+			}
+		}
+		.card-list {
+			@extend %full_width;
+			@extend %margin_zero;
+			@extend %padding_zero;
+			list-style: none;
+			li {
+				display: inline-block;
+			}
+		}
+		.card {
+			@extend %card_block;
+			display: inline-block;
+			margin: 0 10px;
+			vertical-align: top;
+			background: #197ac9;
+			color: #197ac9;
+			border: 1px solid #fff;
+			border-radius: 4px;
+		}
+		.show-card {
+			background: #fff;
+		}
+	}
+	h2 {
+		@extend %margin_zero;
+		&:first-child {
+			margin-bottom: 15px;
+		}
+		color: #fff;
+		text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+		font-size: 24px;
+		font-weight: 300;
+	}
 }
 
-.card {
-	display: inline-block;
-	margin: 0 10px;
-	width: 75px;
-	height: 105px;
-	vertical-align: top;
-	background: #197ac9;
-	color: #197ac9;
-	border: 1px solid #fff;
-	border-radius: 4px;
-}
-
-.show-card {
-	background: #fff;
-}
-
-// actions
+// ACTIONS
 
 .actions {
 	text-align: center;
-	margin: 15px auto;
+	margin-top: 15px;
 }
 
 .button {
@@ -72,4 +126,22 @@
 	border: 1px solid;
 	border-radius: 5px;
 	cursor: pointer;
+}
+
+// RESULTS
+
+#Results {
+	position: absolute;
+	top: calc( 50% - 28px );
+	left: 50%;
+	transform: translate( -50%, -50% );
+	width: 100%;
+	max-width: 600px;
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0px 5px 5px rgba( 0,0,0,0.25 );
+	p {
+		text-align: center;
+		padding: 50px 0;
+	}
 }
