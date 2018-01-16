@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 // import './App.css';
 
 // HELPER FUNCTIONS
-import { flatten, shuffle, isArray, isFunction } from 'lodash';
+import _ from 'lodash';
 import { times } from '../scripts/helpers';
 
 // COMPONENTS
@@ -45,7 +45,7 @@ const setCardValue = val => {
 
 const createDeck = () => {
     // CREATE ARRAY OF SUITS W/ EACH VALUE AND FLATTEN
-	let deck = flatten(
+	let deck = _.flatten(
 		deck_suits.map( suit => {
 			return deck_vals.map( val => {
 				return {
@@ -62,17 +62,17 @@ const createDeck = () => {
 };
 
 const shuffleDeck = deck => {
-	return shuffle( deck );
+	return _.shuffle( deck );
 };
 
-const setShoe = ( num_of_decks = 8 ) => {
+const newShoe = ( num_of_decks = 8 ) => {
 	const shoe = [];
     // ADD # OF DECKS IN SHOE PRE-SHUFFLED
 	times( num_of_decks, () => {
 		shoe.push( createDeck() );
 	});
 
-	return flatten( shoe );
+	return _.flatten( shoe );
 };
 
 const handValue = ( hand=[] ) => {
@@ -160,27 +160,58 @@ export class Table extends Component {
 		this.setState( () => {
 			return {
 				status: 'deal',
-				shoe: setShoe()
+				shoe: newShoe()
 			}
 		});
 	}
 
-	startNewHand = () => {
-		console.log('New Hand');
-        // IF LESS THAN 12 CARDS LEFT RESET SHOE
-		if ( this.state.shoe.length < 12 ) this.setState({ shoe: setShoe() });
-        // RESET HANDS AND DEAL NEW CARDS
-		this.setState( newHand(), () => {
-			// TODO: HANDLE BETTER
-			times( 2, () => {
-				for ( let player of [ 'user', 'dealer' ] ) {
-					this.dealCard( player, this.state[player].cards );
-				}
+	resetHand = ( callback ) => {
+		let new_hand = newHand();
+		// IF LESS THAN 12 CARDS LEFT RESET SHOE
+		if ( this.state.shoe.length < 12 ) {
+			_.assign( new_hand, {
+				shoe: newShoe()
 			});
+		}
 
-			this.setState({
-				status: 'user'
-			});
+		this.setState( new_hand, () => {
+			if ( _.isFunction( callback ) ) {
+				callback();
+			}
+		});
+	}
+
+	dealHands = () => {
+		console.log('New Hand');
+
+		times( 2, () => {
+			for ( let player of [ 'user', 'dealer' ] ) {
+				this.dealCard( player, this.state[player].cards );
+			}
+		});
+        // UPDATE STATUS AND VALUE OF ONLY USER'S HAND
+		this.setState({
+			status: 'user',
+			user: _.assign( {}, this.state.user, {
+				value: handValue( this.state.user.cards )
+			})
+		}, () => {
+            // CHECK FOR BLACKJACKS
+			if ( checkBlackjack( this.state.user.cards, this.state.dealer.cards ) ) {
+				this.endHand();
+			}
+		});
+	}
+
+	hithand = ( player ) => {
+		const hand = this.state[player],
+			  cards = hand.cards;
+
+		this.dealCard( player, cards );
+		this.setState({
+			user: _.assign( {}, hand, {
+				value: handValue( cards )
+			})
 		});
 	}
 
@@ -188,16 +219,16 @@ export class Table extends Component {
 		this.setState({
 			status: 'dealer'
 		}, () => {
-			this.runDealerHand();
+			this.runDealerAction();
 		})
 	}
 
-	runDealerHand = () => {
+	runDealerAction = () => {
 		const value = this.state.dealer.value;
         // DEALER HITS ON SOFT 17 OR BELOW HARD 17
-		if ( ( isArray(value) && value[0] <= 17 ) || ( !isArray(value) && value < 17 ) ) {
-			this.dealCard( 'dealer', () => {
-				this.runDealerHand();
+		if ( ( _.isArray(value) && value[0] <= 17 ) || ( !_.isArray(value) && value < 17 ) ) {
+			this.hitHand( 'dealer', () => {
+				this.runDealerAction();
 			} );
 		} else {
 			this.endHand();
@@ -212,22 +243,15 @@ export class Table extends Component {
 		new_cards.push( new_shoe.shift() );
 
         // UPDATE STATE
-		const value = handValue( new_cards );
 		this.setState( (prevState, props) => {
 			return {
 				shoe: new_shoe,
-				[player]: Object.assign( {}, this.state[player], {
-					cards: new_cards,
-					value
+				[player]: _.assign( {}, this.state[player], {
+					cards: new_cards
 				})
 			};
 		}, () => {
-            // CHECK LATEST HAND RESULTS
-			if ( checkBlackjack( new_cards, value ) || checkBust( value ) ) {
-				this.endHand();
-			}
-
-			if ( isFunction(callback) ) callback();
+			if ( _.isFunction(callback) ) callback();
 		});
 	}
 
@@ -237,6 +261,13 @@ export class Table extends Component {
 		this.setState({
 			status: 'end',
 			result
+		});
+	}
+
+    // SEPERATE FROM RESTART HAND FOR FUTURE BETTING
+	redealHand = () => {
+		this.resetHand( () => {
+			this.dealHand();
 		});
 	}
 
@@ -254,9 +285,10 @@ export class Table extends Component {
 						status={ this.state.status }
 						user={ this.state.user }
 						startClick={ this.startSession }
-						dealClick={ this.startNewHand }
-						hitClick={ this.dealCard }
-						standClick={ this.standHand } />
+						dealClick={ this.dealHands }
+						hitClick={ () => { this.hitHand('user') } }
+						standClick={ this.standHand }
+						redealClick={ this.redealHand} />
 				</section>
 				<Results status={ this.state.status } result={ this.state.result }/>
 			</main>

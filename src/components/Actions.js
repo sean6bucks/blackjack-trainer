@@ -10,7 +10,7 @@ export const Actions = ( props ) => {
 			case 'user':
 				return (
 					<div className="user-actions">
-						<span className="button" onClick={ () => props.hitClick( 'user' ) }>HIT</span>
+						<span className="button" onClick={ props.hitClick }>HIT</span>
 						<span className="button" onClick={ props.standClick }>STAND</span>
 					</div>
 				);
