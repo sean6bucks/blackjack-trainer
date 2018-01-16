@@ -75,33 +75,30 @@ const newShoe = ( num_of_decks = 8 ) => {
 	return _.flatten( shoe );
 };
 
-const handValue = ( hand=[] ) => {
-	// REDUCER FUNCTION
-	const reducer = ( sum, current_val ) => {
-		if ( current_val === 11 && sum >= 11 ) {
-			current_val = 1;
-		}
-		return sum + current_val;
-	}
-
+export const handValue = ( hand=[] ) => {
     // GET HAND VALUES ONLY
 	let values = hand.map( card => card.value );
-	const value = values.reduce(reducer);
-
-    // IF 'A'/11 HANDLE POSSIBLE VALUES
-	if ( values.includes(11) && value !== 21 ) {
-        // IF LESS THAN 21 RETURN ARRAY OF SOFT/HARD VALS > ELSE JUST HARD VAL
-		return value < 21 ? [ value, values.reduce(reducer, -10) ] : values.reduce(reducer, -10);
-	}
-    // ELSE JUST RETURN SUM
-	return value;
+    // HAND HAS ATLEAST ONE ACE
+	const ace = values.includes(11);
+	const value = _.reduce( values, (sum, current_val) => {
+		if ( current_val === 11 ) current_val = 1;
+		return sum + current_val;
+	}, 0);
+    // IF HAND HAS ACE ALWAYS RETURN HARD 21
+	if ( ace && value === 11 ) return value + 10;
+	// ELSE IF ACE AND VAL IS LESS THAN 11 RETURN [SOFT, HARD]
+	else if ( ace && value < 12 ) return [ value + 10, value ];
+	// ELSE JUST RETURN VAL
+	else return value;
 };
 
-const checkBlackjack = ( cards=[], value=0 ) => {
-	return cards.length === 2 && value === 21;
+export const checkBlackjack = ( ...hands ) => {
+	return _.find( hands, cards => {
+		return cards.length === 2 && 21 === handValue( cards );
+	}) ? true : false;
 };
 
-const checkBust = hand_val => {
+export const checkBust = hand => {
 	return typeof hand_val === 'number' && hand_val > 21;
 };
 
