@@ -102,32 +102,33 @@ export const checkBust = value => {
 	return !_.isArray(value) && value > 21;
 };
 
-const getResults = ( user_val, dealer_val ) => {
-	if ( dealer_val > 21 ) {
-		return {
-			winner: 'user',
-			message: 'Dealer Busts!'
-		};
-	} else if ( user_val > 21 || dealer_val > user_val ) {
-		return {
-			winner: 'dealer',
-			message: dealer_val === 21 ? 'Dealer has BlackJack.' : user_val > 21 ? 'Player Busts.' : 'Dealer Wins.'
-		};
-	} else if ( user_val === dealer_val ) {
 export const dealerHits = value => {
     // IF SOFT VAL > CHECK FOR SOFT 17 OR BELOW
 	if ( _.isArray(value) ) return value[0] <= 17;
     // IF HARD VAL > CHECK BELOW 17
 	else return value < 17;
 };
+
+export const getResults = ( user_hand, dealer_hand ) => {
+	const user_val = user_hand.value,
+		  user_cards_len = user_hand.cards.length,
+		  dealer_val = dealer_hand.value,
+		  dealer_cards_len = dealer_hand.cards.length;
+
+	if ( dealer_val === user_val ) {
 		return {
 			winner: 'push',
 			message: 'Push'
 		}
+	} else if ( user_val > 21 || (dealer_val < 22 && dealer_val > user_val) ) {
+		return {
+			winner: 'dealer',
+			message: dealer_cards_len === 2 && dealer_val === 21 ? 'Dealer has BlackJack.' : user_val > 21 ? 'Player Busts.' : 'Dealer Wins.'
+		};
 	} else {
 		return {
 			winner: 'user',
-			message: user_val === 21 ? 'Player has BlackJack!' : 'Player Wins!'
+			message: user_cards_len === 2 && user_val === 21 ? 'Player has BlackJack!' : dealer_val > 21 ? 'Dealer Busts!' : 'Player Wins!'
 		};
 	}
 };
@@ -152,7 +153,8 @@ export class Table extends Component {
 			result: {
 				winner: '',
 				message: ''
-			}
+			},
+			discarded: 0
 		};
 	}
 
@@ -171,16 +173,10 @@ export class Table extends Component {
 	resetHand = ( callback ) => {
 		let new_hand = newHand();
 		// IF LESS THAN 12 CARDS LEFT RESET SHOE
-		if ( this.state.shoe.length < 12 ) {
-			_.assign( new_hand, {
-				shoe: newShoe()
-			});
-		}
+		if ( this.state.shoe.length < 12 ) new_hand.shoe = newShoe();
 
 		this.setState( new_hand, () => {
-			if ( _.isFunction( callback ) ) {
-				callback();
-			}
+			if ( _.isFunction( callback ) ) callback();
 		});
 	}
 
@@ -193,49 +189,21 @@ export class Table extends Component {
 			}
 		});
         // UPDATE STATUS AND VALUE OF ONLY USER'S HAND
+		const user_hand = this.state.user,
+			  user_cards = user_hand.cards,
+			  dealer_cards = this.state.dealer.cards;
+
 		this.setState({
 			status: 'user',
-			user: _.assign( {}, this.state.user, {
-				value: handValue( this.state.user.cards )
+			user: _.assign( {}, user_hand, {
+				value: handValue( user_cards )
 			})
 		}, () => {
             // CHECK FOR BLACKJACKS
-			if ( checkBlackjack( this.state.user.cards, this.state.dealer.cards ) ) {
+			if ( checkBlackjack( user_cards, dealer_cards ) ) {
 				this.endHand();
 			}
 		});
-	}
-
-	hithand = ( player ) => {
-		const hand = this.state[player],
-			  cards = hand.cards;
-
-		this.dealCard( player, cards );
-		this.setState({
-			user: _.assign( {}, hand, {
-				value: handValue( cards )
-			})
-		});
-	}
-
-	standHand = () => {
-		this.setState({
-			status: 'dealer'
-		}, () => {
-			this.runDealerAction();
-		})
-	}
-
-	runDealerAction = () => {
-		const value = this.state.dealer.value;
-        // DEALER HITS ON SOFT 17 OR BELOW HARD 17
-		if ( ( _.isArray(value) && value[0] <= 17 ) || ( !_.isArray(value) && value < 17 ) ) {
-			this.hitHand( 'dealer', () => {
-				this.runDealerAction();
-			} );
-		} else {
-			this.endHand();
-		}
 	}
 
 	dealCard = ( player, callback ) => {
@@ -244,6 +212,11 @@ export class Table extends Component {
 
         // MOVE NEW CARD FROM SHOE TO HAND
 		new_cards.push( new_shoe.shift() );
+
+        // SET DEALER'S FIRST CARD AS HOLE CARD
+		if ( player === 'dealer' && new_cards.length === 1 ) {
+			new_cards[0].type = 'hole';
+		}
 
         // UPDATE STATE
 		this.setState( (prevState, props) => {
@@ -258,19 +231,97 @@ export class Table extends Component {
 		});
 	}
 
+	hitHand = ( player, callback ) => {
+        // ADD NEW CARD TO HAND
+		this.dealCard( player, () => {
+            // SET UPDATED HAND VALUE
+			const hand = this.state[player],
+				  new_val = handValue( hand.cards );
+			this.setState( (prevState, props) => {
+				return {
+					[player]: _.assign( {}, hand, {
+						value: new_val
+					})
+				};
+			}, () => {
+                // CHECK FOR HAND BUST
+				if ( checkBust(new_val) ) {
+					this.endHand();
+                // ELSE CHECK IF USER HAS 21 > AUTO STAND
+				} else if ( player === 'user' && new_val === 21 ) {
+					this.standHand();
+				}
+
+				if ( _.isFunction(callback) ) callback();
+			});
+		});
+	}
+
+	standHand = () => {
+		const user_val = this.state.user.value;
+        // IF STAND WITH SOFT/HARD SET SOFT VALUE
+		let stand_val = _.isArray(user_val) ? user_val[0] : user_val;
+
+        // SET FINAL VALUE AND START DEALERS TURN
+		this.setState({
+			status: 'dealer',
+			user: _.assign( {}, this.state.user, { value: stand_val } )
+		}, () => {
+			this.runDealersHand();
+		});
+	}
+
+	runDealersHand = () => {
+		let dealers_hand = this.state.dealer,
+			dealers_cards = dealers_hand.cards;
+		// SHOW HOLE CARD AND UPDATE VALUE
+		dealers_cards[0].type = 'show';
+		this.setState({
+			dealer: _.assign( {}, dealers_hand, {
+				value: handValue( dealers_cards )
+			})
+		}, () => {
+			// AFTER VALUE UPDATE CHECK DEALER HAND FOR ACTIONS
+			this.dealersAction();
+		})
+	}
+
+	dealersAction = () => {
+		const dealer_val = this.state.dealer.value;
+		// CHECK IF DEALER SHOULD HIT > ELSE END HAND (STAND)
+		if ( dealerHits(dealer_val) ) {
+			this.hitHand( 'dealer', () => {
+				this.dealersAction();
+			});
+		} else {
+			// SET FINAL VALUE AND END HAND
+			let stand_val = _.isArray(dealer_val) ? dealer_val[0] : dealer_val;
+			this.setState({
+				dealer: _.assign( {}, this.state.dealer, { value: stand_val } )
+			}, () => {
+				this.endHand();
+			});
+		}
+	}
+
 	endHand = () => {
-		let result = getResults( this.state.user.value, this.state.dealer.value );
+		const user_hand = this.state.user,
+			  dealer_hand = this.state.dealer;
+
+		const result = getResults( user_hand, dealer_hand );
+		const discarded = this.state.discarded + user_hand.cards.length + dealer_hand.cards.length;
 
 		this.setState({
 			status: 'end',
-			result
+			result,
+			discarded
 		});
 	}
 
     // SEPERATE FROM RESTART HAND FOR FUTURE BETTING
 	redealHand = () => {
 		this.resetHand( () => {
-			this.dealHand();
+			this.dealHands();
 		});
 	}
 

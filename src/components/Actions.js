@@ -16,7 +16,7 @@ export const Actions = ( props ) => {
 				);
 			case 'end':
                 // TODO: TO BE UPDATED WITH BETTING SYSTEM
-				return <span className="button" onClick={ props.dealClick }>DEAL</span>
+				return <span className="button" onClick={ props.redealClick }>RE-DEAL</span>
 			default:
 				// HANDLE SESSION START
 				return <span className="button" onClick={ props.startClick }>START</span>;
