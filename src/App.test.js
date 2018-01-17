@@ -13,6 +13,7 @@ import {
 	handValue,
 	checkBlackjack,
 	checkBust,
+	dealerHits,
 	getResults
 } from './components/Table';
 
@@ -85,13 +86,40 @@ describe( 'Test for Blackjacks', () => {
 
 describe( 'Test for Busts', () => {
 	it( 'J + 5 + Q = 25 Busts', () => {
-		expect( handValue(hands.busts[0]) ).toEqual(25);
-		expect( checkBust(hands.busts[0]) ).toEqual(true);
+		const value = handValue(hands.busts[0]);
+		expect( checkBust(value) ).toEqual(true);
 	});
 	it( '3 + 5 + Q = 18 No Bust', () => {
-		expect( checkBust(hands.busts[1]) ).toEqual(false);
+		const value = handValue(hands.busts[1]);
+		expect( checkBust(value) ).toEqual(false);
 	});
 	it( 'A + 5 + 10 = 16 ( No soft val ) No Bust', () => {
-		expect( checkBust(hands.busts[2]) ).toEqual(false);
+		const value = handValue(hands.busts[2]);
+		expect( checkBust(value) ).toEqual(false);
 	});
-})
+});
+
+describe( 'Test Dealer Actions', () => {
+	it( 'K + 5 should HIT', () => {
+		const value = handValue(hands.dealer[0]);
+		expect( dealerHits(value) ).toEqual(true);
+	});
+	it( 'K + J should STAND', () => {
+		const value = handValue(hands.dealer[1]);
+		expect( dealerHits(value) ).toEqual(false);
+	});
+	it( 'A + 6 should HIT soft 17', () => {
+		const value = handValue(hands.dealer[2]);
+		expect( dealerHits(value) ).toEqual(true);
+	});
+	it( 'A + 5 + 4 should STAND soft 20', () => {
+		const value = handValue(hands.dealer[3]);
+		expect( dealerHits(value) ).toEqual(false);
+	});
+	it( 'A + 5 + K shoud HIT no soft val', () => {
+		const value = handValue(hands.dealer[4]);
+		expect( dealerHits(value) ).toEqual(true);
+	});
+});
+
+// TODO: WRITE TEST FOR RESULT CALCULATIONS

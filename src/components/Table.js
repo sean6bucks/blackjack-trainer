@@ -98,8 +98,8 @@ export const checkBlackjack = ( ...hands ) => {
 	}) ? true : false;
 };
 
-export const checkBust = hand => {
-	return typeof hand_val === 'number' && hand_val > 21;
+export const checkBust = value => {
+	return !_.isArray(value) && value > 21;
 };
 
 const getResults = ( user_val, dealer_val ) => {
@@ -114,6 +114,12 @@ const getResults = ( user_val, dealer_val ) => {
 			message: dealer_val === 21 ? 'Dealer has BlackJack.' : user_val > 21 ? 'Player Busts.' : 'Dealer Wins.'
 		};
 	} else if ( user_val === dealer_val ) {
+export const dealerHits = value => {
+    // IF SOFT VAL > CHECK FOR SOFT 17 OR BELOW
+	if ( _.isArray(value) ) return value[0] <= 17;
+    // IF HARD VAL > CHECK BELOW 17
+	else return value < 17;
+};
 		return {
 			winner: 'push',
 			message: 'Push'
