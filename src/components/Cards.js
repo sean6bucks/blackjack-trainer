@@ -2,9 +2,11 @@ import React from 'react';
 
 const Card = ( props ) => {
 	const card = props.card || {};
-
+	const card_img = card.type === 'hole' ? 'hole-card' :  card.name;
 	return (
-		<li className={ card.type + '-card card' }>{ card.name }</li>
+		<li className={ card.type + '-card card' }>
+			<img alt={ card_img } src={ 'images/cards/' + card_img + '.png' } />
+		</li>
 	);
 }
 
@@ -17,9 +19,6 @@ export const Cards = ( props ) => {
 
 	return (
 		<div className="cards">
-			<div className="cards-bg">
-				<span className="bg-outline"></span>
-			</div>
 			<ul className="card-list">
 				{ card_list }
 			</ul>
