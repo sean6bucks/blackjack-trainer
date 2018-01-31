@@ -1,6 +1,8 @@
 // ======= IMPORTS
 import React, { Component } from 'react';
-// import './App.css';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import * as actions from '../actions';
 
 // HELPER FUNCTIONS
 import _ from 'lodash';
@@ -11,30 +13,13 @@ import { Hand } from './Hand';
 import { Actions } from './Actions';
 import { Results } from './Results';
 
-// ====== STATIC VALUES
+import '../App.css';
 
-const deck_vals = [ '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A' ];
-const deck_suits = [ 'spades', 'hearts', 'clubs', 'diamonds' ];
+// STATIC VALUES
+import { DECK, HAND } from '../constants';
 
 
 // ====== FUNCTIONS
-
-const newHand = () => {
-	return {
-		dealer: {
-			cards: [],
-			value: 0
-		},
-		user: {
-			cards: [],
-			value: 0
-		},
-		result: {
-			winner: '',
-			message: ''
-		}
-	};
-};
 
 // CREATE AND SHUFFLE DECKS AND SHOE
 const setCardValue = val => {
@@ -46,8 +31,8 @@ const setCardValue = val => {
 const createDeck = () => {
     // CREATE ARRAY OF SUITS W/ EACH VALUE AND FLATTEN
 	let deck = _.flatten(
-		deck_suits.map( suit => {
-			return deck_vals.map( val => {
+		DECK.suits.map( suit => {
+			return DECK.vals.map( val => {
 				return {
 					name: val + '-of-' + suit,
 					value: setCardValue(val),
@@ -133,45 +118,16 @@ export const getResults = ( user_hand, dealer_hand ) => {
 	}
 };
 
-// ===== TABLE COMPONENT
+// ===== TABLE CONTAINER COMPONENT
 
-export class Table extends Component {
-	constructor (props) {
-		super(props);
+class Table extends Component {
 
-		this.state = {
-			status: 'start',
-			shoe: [],
-			dealer: {
-				cards: [],
-				value: 0
-			},
-			user: {
-				cards: [],
-				value: 0
-			},
-			result: {
-				winner: '',
-				message: ''
-			},
-			discarded: 0
-		};
-	}
-
-    // CUSTOM FUNCTIONS
-
-	startSession = () => {
-		console.log( 'Session Started' );
-		this.setState( () => {
-			return {
-				status: 'deal',
-				shoe: newShoe()
-			}
-		});
+	handleStartSession = () => {
+		this.props.action.startSession( 'deal' );
 	}
 
 	resetHand = ( callback ) => {
-		let new_hand = newHand();
+		let new_hand = HAND.new();
 		// IF LESS THAN 12 CARDS LEFT RESET SHOE
 		if ( this.state.shoe.length < 12 ) new_hand.shoe = newShoe();
 
@@ -331,21 +287,40 @@ export class Table extends Component {
 		return (
 			<main id="Table">
 				<section id="Dealer">
-					<Hand hand_id="dealer" data={ this.state.dealer } />
+					<Hand hand_id="dealer" data={ this.props.dealer } />
 				</section>
 				<section id="User">
-					<Hand hand_id="user" data={ this.state.user } />
+					<Hand hand_id="user" data={ this.props.user } />
 					<Actions
-						status={ this.state.status }
-						user={ this.state.user }
-						startClick={ this.startSession }
+						status={ this.props.status }
+						user={ this.props.user }
+						startClick={ this.handleStartSession }
 						dealClick={ this.dealHands }
 						hitClick={ () => { this.hitHand('user') } }
 						standClick={ this.standHand }
 						redealClick={ this.redealHand} />
 				</section>
-				<Results status={ this.state.status } result={ this.state.result }/>
+				<Results status={ this.props.status } result={ this.props.result }/>
 			</main>
 		);
 	}
+}
+
+function mapStateToProps( state, prop ) {
+	return {
+		status: state.status,
+		shoe: state.shoe,
+		dealer: state.dealer,
+		user: state.user,
+		result: state.result,
+		discarded: state.discarded
+	}
+}
+
+function mapDispatchToProps( dispatch ) {
+	return {
+		action: bindActionCreators( actions, dispatch )
+	}
 };
+
+export default connect(mapStateToProps, mapDispatchToProps)(Table);
